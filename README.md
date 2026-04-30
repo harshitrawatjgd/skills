@@ -22,10 +22,16 @@ To learn more, read the official documentation:
 
 ### Install Android skills
 
-Use Android CLI to install Android skills to directories for all detected agents:
+Use Android CLI to install a specific skill into the current directory:
 
 ```
-android skills add [--all] [--agent=<agent-name>] [--skill=<skill-name>]
+android skills add --skill=r8-analyzer --project=.
+```
+
+Use Android CLI to install all Android skills to directories for all detected agents:
+
+```
+android skills add --all
 ```
 
 If you don't have any existing agent directories and don't specify particular agents, the skills
@@ -39,6 +45,7 @@ will be installed for Gemini and Antigravity at `~/.gemini/antigravity/skills`.
   be installed for all detected agents.
 - `--skill` - Specific skill that you want to install. If omitted (and `--all` isn't specified),
   only the `android-cli` skill will be installed.
+- `--path` - Path to a project root in which to install the skills.
 
 ## Disclaimer
 
