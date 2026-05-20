@@ -1,6 +1,17 @@
 ---
 name: android-cli
 description: Orchestrates Android development tasks including project creation, deployment, SDK management, and environment diagnostics using the `android` command-line tool.
+license: Complete terms in LICENSE.txt
+metadata:
+  author: Google LLC
+  keywords:
+  - sdk
+  - emulator
+  - skills
+  - docs
+  - knowledge base
+  - project creation
+  - screenshots
 ---
 # Android CLI Specialist
 
