@@ -6,7 +6,7 @@ description: Analyzes Perfetto traces to find the root cause of latency, memory,
 license: Complete terms in LICENSE.txt
 metadata:
   author: Google LLC
-  last-updated: '2026-05-14'
+  last-updated: '2026-06-04'
   keywords:
   - Perfetto
   - trace analysis

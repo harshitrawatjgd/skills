@@ -306,8 +306,8 @@ SELECT (
 ) AS is_system_trace
 ```
 
-If this returns `0`, stop execution and inform the user in general
-language without exposing the internal mechanics.
+If this returns `0`, stop execution and inform the user in plain
+language without exposing internal mechanics.
 
 ### Step 1: Dissection and Schema Research
 

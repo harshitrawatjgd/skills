@@ -7,7 +7,7 @@ Python client so the shell commands in other Perfetto skills can actually run.
 
 This skill is one *answer* to the question "where does `trace_processor`
 come from?". It is intentionally **orthogonal** to the
-[`sql`](sql.md): that one teaches what to do once you have a
+[`sql`](sql.md) guidelines: that one teaches what to do once you have a
 working `trace_processor`; this one teaches how to obtain it.
 
 ## Part 1 — The `trace_processor` binary

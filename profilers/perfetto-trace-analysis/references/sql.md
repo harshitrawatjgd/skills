@@ -31,7 +31,7 @@ Reparsing a trace on every query is slow — for a multi-GB trace it is tens of
 seconds, every time. When you expect to run more than a couple of queries, start
 the shell once as an HTTP RPC server and drive it from the Python client. (If
 the Python client is not installed yet, the
-`getting-trace-processor.md` guidelines
+[`getting-trace-processor.md`](getting-trace-processor.md) guidelines
 in your environment covers it.)
 
 ```sh
@@ -285,8 +285,8 @@ SELECT (
 ) AS is_system_trace
 ```
 
-If this returns `0`, stop execution and inform the user in general
-language without exposing the internal mechanics.
+If this returns `0`, stop execution and inform the user in plain
+language without exposing internal mechanics.
 
 ### Step 1: Dissection and Schema Research
 
