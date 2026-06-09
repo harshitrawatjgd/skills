@@ -1,14 +1,9 @@
-# Introduction
-
-Defines how to fetch the prebuilt `trace_processor` binary and the `perfetto`
-Python client so the shell commands in other Perfetto skills can actually run.
-
 # Getting `trace_processor` and the Python client
 
-This skill is one *answer* to the question "where does `trace_processor`
-come from?". It is intentionally **orthogonal** to the
-[`sql`](sql.md) guidelines: that one teaches what to do once you have a
-working `trace_processor`; this one teaches how to obtain it.
+This is the environment setup for a **standalone install** that does not
+ship a bundled `trace_processor` — it tells you how to *obtain* the
+binary and Python client (the rest of the skill assumes you then have a
+working `trace_processor`).
 
 ## Part 1 — The `trace_processor` binary
 
@@ -18,21 +13,26 @@ You must use the top level of the current project workspace
 (`./trace_processor`).
 
 > **CRITICAL GUARDRAIL:** NEVER use filesystem search tools
-> (`find`, `find_by_name`, `grep`, `dir /s`, `Get-ChildItem`) across the home
-> directory or workspace to locate `trace_processor` — unconstrained searches
-> across entire workspaces will stop responding or time out.
+> (`find`, `find_by_name`, `grep`, `dir /s`, `Get-ChildItem`) across
+> the home directory or workspace to locate `trace_processor` —
+> unconstrained searches across entire workspaces will stop
+> responding or time out.
 
 Perform a direct file check at the top level of your workspace
 (for example, `ls trace_processor`).
 
-If an existing trace processor is found, run the below test probe to verify
-that it has the __intrinsic_stdlib_* tables. This is a hard requirement.
+If an existing trace processor is found, run the below test probe
+(if running in standalone mode) to verify that it has the
+__intrinsic_stdlib_* tables. If running in RPC mode, execute
+this query via the Python client.
 `./trace_processor query TRACE_FILE "SELECT 1 FROM __intrinsic_stdlib_modules LIMIT 1;"`
 
-If the trace processor is missing or the probe fails ("no such table"),
-you must download the latest prebuilt binary directly into the root workspace
-by following guidelines below. Perfetto trace_processor version >= v56.0*
-and beyond have the intrinsic stdlib tables baked in.
+If the trace processor is missing or the probe fails
+("no such table"), you must download the latest prebuilt binary
+directly into the root workspace by following instructions below.
+
+**Note:** Perfetto trace_processor version >= v56.0* and beyond have
+the intrinsic stdlib tables available.
 
 ### Downloading the prebuilt binary
 
@@ -46,6 +46,10 @@ chmod +x trace_processor
 ./trace_processor --version    # smoke test
 ```
 
+> **Windows:** `chmod +x` is not needed. Run the wrapper directly as
+> `python trace_processor` instead of `./trace_processor`.
+> All other commands translate naturally to PowerShell equivalents.
+
 `get.perfetto.dev/trace_processor` is a small wrapper script that picks
 the right prebuilt binary for the host platform (Linux x86_64 / arm64,
 macOS, Windows) and caches it. Re-running the `curl -LO` (or just
@@ -55,17 +59,16 @@ the upstream binary actually changes. **Don't move it onto `PATH`** as
 a one-shot install: doing so encourages users to keep running a stale
 binary indefinitely.
 
-> **Important:** The file served at this URL is a `~10KB` Python wrapper
-> script. Don't assume the download failed because it is human-readable text.
-> This is the intended behavior. This script handles lazy-loading the
-> precompiled binary automatically on its first run. Use it directly.
+If a Perfetto source checkout *is* available, `tools/trace_processor`
+inside that checkout does the same fetch under the hood and
+additionally supports `--build` for a from-source build.
 
 ## Part 2 — The Python client (for long-running RPC mode)
 
-The [`sql`](sql.md) guidelines recommends starting `./trace_processor server
-http TRACE_FILE` once and connecting from Python so iteration doesn't
-reparse the trace on every query. That requires the `perfetto` Python
-package (and `protobuf`).
+[`perfetto-sql`](../SKILL.md) skill recommends starting
+`trace_processor server http TRACE_FILE` once and connecting from
+Python so iteration doesn't reparse the trace on every query. That
+requires the `perfetto` Python package (and `protobuf`).
 
 ### Default: an isolated venv
 
@@ -85,7 +88,7 @@ python3 -m venv ~/.venv/perfetto
   "from perfetto.trace_processor import TraceProcessor; print('ok')"
 ```
 
-Then invoke Python from the querying skill as
+Then invoke Python from the querying reference as
 `~/.venv/perfetto/bin/python`, or `source ~/.venv/perfetto/bin/activate`
 once per shell and use plain `python`.
 
@@ -111,7 +114,7 @@ A one-shot end-to-end check that the binary and the client agree:
 # Start the server on a small trace in the background, on a random port
 # to avoid clashing with any other trace_processor server / the UI.
 PORT=$((9100 + RANDOM % 900))
-./trace_processor server http --port $PORT /path/to/some_trace.pftrace &
+trace_processor server http --port $PORT /path/to/some_trace.pftrace &
 SERVER_PID=$!
 sleep 1
 
@@ -128,4 +131,4 @@ kill $SERVER_PID
 ```
 
 If this prints a non-zero count and exits cleanly, the user is ready to
-follow the [`sql`](sql.md) guidelines.
+follow [`perfetto-sql`](../SKILL.md).

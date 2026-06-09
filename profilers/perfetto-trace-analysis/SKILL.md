@@ -6,7 +6,7 @@ description: Analyzes Perfetto traces to find the root cause of latency, memory,
 license: Complete terms in LICENSE.txt
 metadata:
   author: Google LLC
-  last-updated: '2026-06-04'
+  last-updated: '2026-06-09'
   keywords:
   - Perfetto
   - trace analysis
@@ -70,7 +70,7 @@ isolated the definitive root cause(s):
   android_startup`).
   **Note:** Follow these instructions on how to fetch and
   set up the trace_processor:
-  [`getting-trace-processor.md`](references/getting-trace-processor.md)
+  [`setup.md`](references/setup.md)
 - **Broad to Narrow:** Begin with broad queries using minimal filters. Favor fuzzy matching (e.g., `GLOB '*abc*'`) over exact matching.
 - **Overlapping Time:** When filtering by time, you MUST check for events that overlap with the target time range (e.g., `start1 < end2 AND start2 < end1`) to ensure you don't miss slices that span across the boundaries.
 
@@ -90,8 +90,9 @@ isolated the definitive root cause(s):
 
 Only when you have followed the entire chain of dependencies to the root
 cause(s) AND confirmed through exhaustive search that no other major bottlenecks
-exist: 1. Summarize your findings detailing the verified chain of evidence. 2.
-Conclude with: "This concludes the trace analysis. You can review the full chain
-of evidence in \[scratchpad_filename\]. Let me know if you would like me to drill
-down into any of these specific threads, or if you'd like help drafting a bug
-report."
+exist:
+1. Summarize your findings detailing the verified chain of evidence.
+2. Conclude with: "This concludes the trace analysis. You can review the full chain
+   of evidence in \[scratchpad_filename\]. Let me know if you would like me to drill
+   down into any of these specific threads, or if you'd like help drafting a bug
+   report."
