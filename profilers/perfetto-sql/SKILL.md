@@ -113,9 +113,8 @@ Notes:
   IPv4/IPv6 explicitly and `localhost` resolution can pick an interface
   that isn't bound on macOS.
 - A quick liveness check from the shell:
-  `curl http://127.0.0.1:PORT/status` returns plain JSON-ish status
-  (loaded path, version) and is the fastest way to confirm the server
-  is up.
+  `curl -sIf -m 1 http://127.0.0.1:PORT/status` is the fastest way
+  to confirm the server is up.
 - The on-the-wire `/query`, `/parse`, `/rpc` endpoints take protobuf-
   encoded `QueryArgs`/`TraceProcessorRpc` payloads. **Do not hand-craft
   HTTP calls with `curl`** — use the Python client (or the WASM
@@ -321,12 +320,12 @@ To ensure accuracy and efficiency, follow these steps:
 
 1. **Execution Mode Selection (Pre-flight)**: Before running any
    query, determine the size of the trace file using relevant
-   commands like `stat` depending on the target platform.
+   commands like `stat`, `ls -lh` depending on the target platform.
 
-   | File size | Mode | Action                                                                                                                                                                                     |
-      |---|---|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | File size  | Mode           | Action                                                                                                                                                                                   |
+      |------------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
    | **< 1 GB** | **Standalone** | Use `trace_processor query TRACE_FILE "..."` for every query in the steps below. No further setup needed.                                                                                |
-   | **≥ 1 GB** | **RPC** | Start the HTTP server now (see Long-running mode section) before proceeding. Drive all queries in the steps below through the Python client. Do not call `trace_processor query` at all. |
+   | **≥ 1 GB** | **RPC**        | Start the HTTP server now (see Long-running mode section) before proceeding. Drive all queries in the steps below through the Python client. Do not call `trace_processor query` at all. |
 
    > **Why:** Reparsing a multi-GB trace on every query costs tens of
    > seconds of latency per call. The RPC server parses once and holds
@@ -335,7 +334,7 @@ To ensure accuracy and efficiency, follow these steps:
    > prefer it.
 
    If **RPC mode** is selected, start the server now and confirm it is live with:
-   `curl http://127.0.0.1:$PORT/status`. Then proceed to Step 2.
+   `curl -sIf -m 1 http://127.0.0.1:$PORT/status`. Then proceed to Step 2.
 2. **Trace Type Validation (Fail Fast)**: This skill explicitly targets
    system traces. You must verify if the trace file is a system trace
    before proceeding. Run the following probe to confirm:
@@ -367,31 +366,32 @@ To ensure accuracy and efficiency, follow these steps:
    `__intrinsic_*` tables globally (for example, `GLOB 'overlap*'`) before
     writing `MIN()/MAX()` or `IIF(dur = -1...)` logic.
 6. **Draft & Validate Loop (Max 3 Iterations):**
-  - [ ] **Draft:** Use only verified schemas. Ensure `INCLUDE PERFETTO
+   - [ ] **Draft:** Use only verified schemas. Ensure `INCLUDE PERFETTO
     MODULE` is present for non-prelude modules.
-  - [ ] **Verify Idempotency:** Use `CREATE OR REPLACE` or `DROP TABLE IF
+   - [ ] **Verify Idempotency:** Use `CREATE OR REPLACE` or `DROP TABLE IF
     EXISTS` for virtual tables.
-  - [ ] **Check Precision:** Are ALL columns prefixed with aliases (e.g.,
+   - [ ] **Check Precision:** Are ALL columns prefixed with aliases (e.g.,
     `s.name`)? Are you joining on `utid`/`upid`?
-  - [ ] **String Matching:** Did you use `GLOB` or `=` instead of `LIKE`?
-  - [ ] **Span Join Check:** If using `SPAN_JOIN`, are tables `PARTITIONED`
+   - [ ] **String Matching:** Did you use `GLOB` or `=` instead of `LIKE`?
+   - [ ] **Span Join Check:** If using `SPAN_JOIN`, are tables `PARTITIONED`
     and materialized?
-  - [ ] **Execute:** Run the query using the execution mode selected
+   - [ ] **Execute:** Run the query using the execution mode selected
     in Step 2.
 
    **Execution Rules:**
-  - **File Usage:** If you must create a SQL file to execute queries (for
-    example, due to query length or escaping issues), you must create them
-    in the `/tmp/` directory.
-  - **Failure Resilience:** Debug and fix SQL syntax and logic errors when
-    query fails. Don't simplify the analytical intent to pass validation.
-    For example, if requested to calculate an overlap or intersection, you
-    must fix the intersection math. Don't substitute with disjoint queries
-    (for example, returning independent total durations) as a workaround.
+   - **File Usage:** If you must create a SQL file to execute queries (for
+     example, due to query length or escaping issues), you must create them
+     in the `/tmp/` directory.
+   - **Failure Resilience:** Debug and fix SQL syntax and logic errors when
+     query fails. Don't simplify the analytical intent to pass validation.
+     For example, if requested to calculate an overlap or intersection, you
+     must fix the intersection math. Don't substitute with disjoint queries
+     (for example, returning independent total durations) as a workaround.
 7. **Cleanup & Finalize:**
   - Explicitly return and state the final validated SQL and explain the
     results to the user.
   - Before finishing, delete any temporary SQL files created in `/tmp/`.
+  - Ensure you have killed the $SERVER_PID before exiting.
 
 ## Where to look for more
 

@@ -5,6 +5,16 @@ ship a bundled `trace_processor` — it tells you how to *obtain* the
 binary and Python client (the rest of the skill assumes you then have a
 working `trace_processor`).
 
+There are many possible answers depending on the environment — Google
+internal users, OEM build environments, CI images, and other teams
+typically have their own preferred or mandatory path. **If the user is
+in such an environment, prefer their team-specific setup.** Use this one
+when nothing more specific is available.
+
+This is also the setup used by fallback-style agent installs such as
+Antigravity, because those installs consume the root `skills/` layout
+and do not receive a plugin-bundled `bin/trace_processor` wrapper.
+
 ## Part 1 — The `trace_processor` binary
 
 ### Checking availability before downloading
@@ -25,7 +35,7 @@ If an existing trace processor is found, run the below test probe
 (if running in standalone mode) to verify that it has the
 __intrinsic_stdlib_* tables. If running in RPC mode, execute
 this query via the Python client.
-`./trace_processor query TRACE_FILE "SELECT 1 FROM __intrinsic_stdlib_modules LIMIT 1;"`
+`trace_processor query TRACE_FILE "SELECT 1 FROM __intrinsic_stdlib_modules LIMIT 1;"`
 
 If the trace processor is missing or the probe fails
 ("no such table"), you must download the latest prebuilt binary
@@ -48,7 +58,7 @@ chmod +x trace_processor
 
 > **Windows:** `chmod +x` is not needed. Run the wrapper directly as
 > `python trace_processor` instead of `./trace_processor`.
-> All other commands translate naturally to PowerShell equivalents.
+> All other commands translate naturally to platform equivalents.
 
 `get.perfetto.dev/trace_processor` is a small wrapper script that picks
 the right prebuilt binary for the host platform (Linux x86_64 / arm64,
@@ -65,10 +75,11 @@ additionally supports `--build` for a from-source build.
 
 ## Part 2 — The Python client (for long-running RPC mode)
 
-[`perfetto-sql`](../SKILL.md) skill recommends starting
-`trace_processor server http TRACE_FILE` once and connecting from
-Python so iteration doesn't reparse the trace on every query. That
-requires the `perfetto` Python package (and `protobuf`).
+[`perfetto-sql`](../SKILL.md) skill recommends starting `trace_processor
+server http TRACE_FILE` once and connecting from Python so iteration doesn't
+re-parse the trace on every query. That requires the `perfetto` Python
+package (and `protobuf`).
+
 
 ### Default: an isolated venv
 
@@ -104,7 +115,7 @@ once per shell and use plain `python`.
   when they ask.
 - **The environment has its own packaging story** (Google internal,
   CI images with pre-baked deps, locked-down corporate Python): defer
-  to that. This skill is the OSS default, not a mandate.
+  to that. This is the OSS default, not a mandate.
 
 ## Verifying the full setup
 
@@ -116,7 +127,13 @@ A one-shot end-to-end check that the binary and the client agree:
 PORT=$((9100 + RANDOM % 900))
 trace_processor server http --port $PORT /path/to/some_trace.pftrace &
 SERVER_PID=$!
-sleep 1
+
+# Liveness check
+# Poll until server ready (timeout 120s)
+for i in {1..120}; do
+  kill -0 $SERVER_PID 2>/dev/null || { echo "Server crashed"; exit 1; }
+  curl -sIf -m 1 http://127.0.0.1:$PORT/status >/dev/null && break || sleep 1
+done
 
 # Query via the Python client.
 ~/.venv/perfetto/bin/python - "$PORT" <<'PY'
@@ -131,4 +148,4 @@ kill $SERVER_PID
 ```
 
 If this prints a non-zero count and exits cleanly, the user is ready to
-follow [`perfetto-sql`](../SKILL.md).
+follow [`perfetto-sql`](../SKILL.md) skill.
