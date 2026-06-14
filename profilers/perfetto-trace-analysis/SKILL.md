@@ -25,18 +25,13 @@ metadata:
 
 ## Setup Phase (Mandatory)
 
-1. **Initialize Scratchpad (Chain of Evidence):**
-   - Maintain your working memory in a local scratchpad file located in the exact same directory as the target trace file.
-   - Name the file using the trace's filename appended with `_analysis.md` (e.g., `[trace_filename]_analysis.md`). Before creating it, check if a file with that name already exists by listing the directory's contents---to avoid biasing your investigation, DO NOT read the file's contents to check for its existence. If it does, append an incrementing version number (e.g., `_v2.md`, `_v3.md`) until you find an available filename. You MUST hardcode this exact filename in all subsequent tool calls.
-   - Use this scratchpad STRICTLY to log verified facts: timestamps, slice names, thread IDs (utid/tid), and thread states.
-   - DO NOT write preliminary hypotheses or premature conclusions in the scratchpad. It is a strict Chain of Evidence.
-2. **Review Domain Hints:** Read the Domain Hints in each file to get a high-level overview of what techniques are possible. Make sure to use this baseline knowledge when researching and retrieving hints during the ongoing investigation.
-3. **Review SQL Reference:** Read the SQL reference in [`references/sql.md`](references/sql.md) and follow its Execution Protocol for all SQL generation. Do not guess schemas.
-4. **Target Resolution:** If the user's request is broad (e.g., "why is the app slow?") and doesn't specify a package name:
+1. **Review Domain Hints:** Read the Domain Hints in each file to get a high-level overview of what techniques are possible. Make sure to use this baseline knowledge when researching and retrieving hints during the ongoing investigation.
+2. **Review SQL Reference:** Read the SQL reference in [`references/sql.md`](references/sql.md) and follow its Execution Protocol for all SQL generation. Do not guess schemas.
+3. **Target Resolution:** If the user's request is broad (e.g., "why is the app slow?") and doesn't specify a package name:
    - Execute a query to identify the active application: `sql INCLUDE
      PERFETTO MODULE android.startup.startups; SELECT package FROM
      android_startups;`
-   - If multiple packages are returned, ask the user to choose one. Save the chosen `package_name` to your scratchpad.
+   - If multiple packages are returned, ask the user to choose one.
 
 ## Investigation Protocol
 
@@ -73,7 +68,6 @@ Follow this iterative loop until you have isolated the definitive root cause(s):
 Only when you have followed the entire chain of dependencies to the root
 cause(s) AND confirmed through exhaustive search that no other major bottlenecks
 exist: 1. Summarize your findings detailing the verified chain of evidence. 2.
-Conclude with: "This concludes the trace analysis. You can review the full chain
-of evidence in \[scratchpad_filename\]. Let me know if you would like me to drill
-down into any of these specific threads, or if you'd like help drafting a bug
-report."
+Conclude with: "This concludes the trace analysis. Let me know if you would
+like me to drill down into any of these specific threads, or if you'd like
+help drafting a bug report."
