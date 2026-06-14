@@ -32,7 +32,16 @@ metadata:
    - DO NOT write preliminary hypotheses or premature conclusions in the scratchpad. It is a strict Chain of Evidence.
 2. **Review Domain Hints:** Read the Domain Hints in each file to get a high-level overview of what techniques are possible. Make sure to use this baseline knowledge when researching and retrieving hints during the ongoing investigation.
 3. **Review SQL Reference:** Read the SQL reference in [`references/sql.md`](references/sql.md) and follow its Execution Protocol for all SQL generation. Do not guess schemas.
-4. **Target Resolution:** If the user's request is broad (e.g., "why is the app slow?") and doesn't specify a package name:
+4. **Trace Type Validation (Fail Fast):** This skill explicitly targets system traces. Before proceeding, run the following probe to confirm:
+   ```sql
+   SELECT (
+     EXISTS(SELECT 1 FROM sched LIMIT 1) OR
+     EXISTS(SELECT 1 FROM cpu_counter_track LIMIT 1) OR
+     EXISTS(SELECT 1 FROM raw LIMIT 1)
+   ) AS is_system_trace
+   ```
+   If `is_system_trace` is `0`, stop execution and inform the user in plain language without exposing internal mechanics.
+5. **Target Resolution:** If the user's request is broad (e.g., "why is the app slow?") and doesn't specify a package name:
    - Execute a query to identify the active application: `sql INCLUDE
      PERFETTO MODULE android.startup.startups; SELECT package FROM
      android_startups;`
